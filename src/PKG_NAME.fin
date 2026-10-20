@@ -1,14 +1,30 @@
-// {{PKG_NAME}} — {{DESCRIPTION}}
-//
-// File name matters: it must be src/{{PKG_NAME}}.fin (NOT src/lib.fin), so the
-// module name is unique per package and two dependencies never collide on
-// `lib`. Consumers import by name:
-//   import { some_function } from {{PKG_NAME}}::fin;
-// By-name calls are the import spelling the backend supports; qualified calls
-// (fin.some_function(...)) are refused.
+// PKG_NAME — {{DESCRIPTION}}
+// Import public symbols by name from PKG_NAME::fin.
 
 namespace fin {
 
-// TODO: implement
+pub struct AddResult {
+    pub ok <bool>,
+    pub value <int>
+}
+
+// Fin int is signed 32-bit. Check BEFORE adding: signed overflow is not
+// a portable way to detect an error, especially in optimized builds.
+// No allocation or blame: overflow is a recoverable status, with value = 0.
+pub fun checked_add(a: int, b: int) <AddResult> {
+    const maximum <int> = 2147483647;
+    const minimum <int> = -2147483647 - 1;
+    if (b > 0) {
+        if (a > maximum - b) {
+            return AddResult{ok: false, value: 0};
+        }
+    }
+    if (b < 0) {
+        if (a < minimum - b) {
+            return AddResult{ok: false, value: 0};
+        }
+    }
+    return AddResult{ok: true, value: a + b};
+}
 
 }

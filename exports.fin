@@ -1,2 +1,5 @@
-// Export symbols from the main library file (rename to match src/{{PKG_NAME}}.fin)
-export * from "src/{{PKG_NAME}}";
+// Package layout marker for finn; this file is not a compiler entrypoint.
+// finn recognizes exports.fin by its presence, not by interpreting its contents.
+// Public declarations live in src/PKG_NAME.fin, inside namespace fin.
+// Consumers use: import { AddResult, checked_add } from PKG_NAME::fin;
+// There is no executable re-export syntax in this marker.

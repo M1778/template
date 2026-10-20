@@ -1,9 +1,63 @@
-// Tests for {{PKG_NAME}}.
-// Run: finc -I ../src tests/test_lib.fin -o test_{{PKG_NAME}} && ./test_{{PKG_NAME}}
-import { assert_true } from testing::std;
+// Run from any directory: sh /path/to/package/tests/run.sh test -O2
+import { AddResult, checked_add } from PKG_NAME::fin;
+import { assert_true, assert_eq_int } from testing::std;
+
+fun expect_sum(a: int, b: int, expected: int) <noret> {
+    let result <AddResult> = checked_add(a, b);
+    assert_true(result.ok, "valid sum must succeed");
+    assert_eq_int(result.value, expected, "sum must be exact");
+    let reversed <AddResult> = checked_add(b, a);
+    assert_true(reversed.ok, "reversed sum must succeed");
+    assert_eq_int(reversed.value, expected, "addition must be commutative");
+}
+
+fun expect_overflow(a: int, b: int) <noret> {
+    let result <AddResult> = checked_add(a, b);
+    assert_true(!result.ok, "overflow must be reported");
+    assert_eq_int(result.value, 0, "error result must have deterministic value");
+    let reversed <AddResult> = checked_add(b, a);
+    assert_true(!reversed.ok, "reversed overflow must be reported");
+    assert_eq_int(reversed.value, 0, "reversed error value must be zero");
+}
 
 fun main() <noret> {
-    // TODO: add tests
-    assert_true(true, "placeholder");
-    printf("All tests passed!\n");
+    const maximum <int> = 2147483647;
+    const minimum <int> = -2147483647 - 1;
+
+    expect_sum(0, 0, 0);
+    expect_sum(19, 23, 42);
+    expect_sum(-19, -23, -42);
+    expect_sum(-19, 23, 4);
+    expect_sum(19, -23, -4);
+    expect_sum(42, -42, 0);
+    expect_sum(maximum, 0, maximum);
+    expect_sum(minimum, 0, minimum);
+    expect_sum(maximum - 1, 1, maximum);
+    expect_sum(minimum + 1, -1, minimum);
+    expect_sum(maximum, -1, maximum - 1);
+    expect_sum(minimum, 1, minimum + 1);
+    expect_sum(maximum, minimum, -1);
+    expect_sum(maximum, -maximum, 0);
+    expect_sum(minimum + 1, maximum, 0);
+    expect_sum(1073741823, 1073741824, maximum);
+    expect_sum(-1073741824, -1073741824, minimum);
+
+    expect_overflow(maximum, 1);
+    expect_overflow(minimum, -1);
+    expect_overflow(maximum, maximum);
+    expect_overflow(minimum, minimum);
+    expect_overflow(maximum - 1, 2);
+    expect_overflow(minimum + 1, -2);
+    expect_overflow(1073741824, 1073741824);
+    expect_overflow(-1073741824, -1073741825);
+
+    // The expected arithmetic is safe throughout this bounded sweep.
+    for (let a <int> = -100; a <= 100; a++) {
+        for (let b <int> = -100; b <= 100; b++) {
+            expect_sum(a, b, a + b);
+        }
+    }
+    // Errors did not abort the program or poison a later successful call.
+    expect_sum(20, 22, 42);
+    printf("checked-add: boundary cases and 40401 input pairs passed\n");
 }

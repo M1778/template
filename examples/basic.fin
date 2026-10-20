@@ -1,6 +1,14 @@
-// Example usage of {{PKG_NAME}}
+// Example usage of PKG_NAME: check status before using the result.
+import { AddResult, checked_add } from PKG_NAME::fin;
 
 fun main() <noret> {
-    printf("{{PKG_NAME}} example\n");
-    // TODO: add example
+    let sum <AddResult> = checked_add(20, 22);
+    if (sum.ok) {
+        printf("20 + 22 = %d\n", sum.value);
+    }
+
+    let too_large <AddResult> = checked_add(2147483647, 1);
+    if (!too_large.ok) {
+        printf("2147483647 + 1: overflow (handled without aborting)\n");
+    }
 }

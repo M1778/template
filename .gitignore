@@ -2,4 +2,5 @@
 out/
 *.o
 *.exe
-test_{{PKG_NAME}}
+test_tmpl
+example_basic
